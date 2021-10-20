@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<launch>
+
+   <!--
+
+  "14442C109130A1D000" - 1 or blue
+  "14442C10C1FAA1D000" - 2 or green
+  "14442C10C1CF0FD100" - 3 or yellow
+  "14442C100199A1D000" - 4 or orange
+
+  -->
+
+  <arg name="camera_name"          default="oak" />
+  <arg name="camera_param_uri"      default="package://depthai_ros_nodes/params/camera" />
+
+  <!--
+  <node pkg="oak_d_ros" type="depth_publisher.py" name="oak_depth_publisher" output="screen">
+    <param name="cam_id" value="14442C109130A1D000" />
+    <param name="camera_name" value="oak"/>
+    <param name="camera_param_uri" value="$(arg camera_param_uri)"/>
+    <param name="debug" value="false"/>
+
+  </node>
+  
+  <node pkg="oak_d_ros" type="simple_image_subscriber.py" name="simple_image_subscriber" output="screen">
+    <param name="image" value="fr_oak/rgb/image"/>
+
+  </node>
+  -->
+  
+  <node pkg="oak_d_ros" type="depth_publisher.py" name="fr_oak_depth_publisher" output="screen">
+    <param name="cam_id" value="14442C10C1FAA1D000" />
+    <param name="camera_name" value="fr_oak"/>
+    <param name="camera_param_uri" value="$(arg camera_param_uri)"/>
+    <param name="debug" value="false"/>
+
+  </node>
+  
+
+  <node pkg="oak_d_ros" type="depth_publisher.py" name="fl_oak_depth_publisher" output="screen">
+    <param name="cam_id" value="14442C100199A1D000" />
+    <param name="camera_name" value="fl_oak"/>
+    <param name="camera_param_uri" value="$(arg camera_param_uri)"/>
+    <param name="debug" value="false"/>
+
+  </node>
+
+  <include file="$(find zed_wrapper)/launch/zed_no_tf.launch" />
+
+
+ 
+</launch>
+
+
+
+ 
