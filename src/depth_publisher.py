@@ -97,7 +97,7 @@ def create_pipeline():
     camRgb.preview.link(xoutRgb.input)
 
 
-    return pipeline, multiplier
+    return pipeline, depth, multiplier
 
 def image_publisher():
 
@@ -170,7 +170,7 @@ def image_publisher():
         else:
             raise RuntimeError("No device found!")
 
-    pipeline, multiplier = create_pipeline()
+    pipeline, depth, multiplier = create_pipeline()
 
     # Pipeline defined, now the device is connected to
     with dai.Device(pipeline, device_info) as device:
@@ -198,12 +198,10 @@ def image_publisher():
 
             #print(frame.shape)
             
-            cv_frame = (frame.copy()).astype(np.uint8)
+            #cv_frame = (frame.copy()).astype(np.uint8)
 
             # Normalization for better visualization
-            #cv_frame = (frame * (255 / depth.initialConfig.getMaxDisparity())).astype(np.uint8)
-
-       
+            cv_frame = (frame * (255 / depth.initialConfig.getMaxDisparity())).astype(np.uint8)
             
             #print(np.min(frame), np.max(frame), i)
             #i = i + 1
