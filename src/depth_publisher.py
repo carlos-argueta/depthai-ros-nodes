@@ -200,13 +200,18 @@ def image_publisher():
             
             cv_frame = (frame.copy()).astype(np.uint8)
 
+            # Normalization for better visualization
+            #cv_frame = (frame * (255 / depth.initialConfig.getMaxDisparity())).astype(np.uint8)
+
+       
+            
             #print(np.min(frame), np.max(frame), i)
             #i = i + 1
 
             # Available color maps: https://docs.opencv.org/3.4/d3/d50/group__imgproc__colormap.html
             cv_frame = cv2.applyColorMap(cv_frame, cv2.COLORMAP_JET)
 
-            depth_image_msg = bridge.cv2_to_imgmsg(frame, encoding="passthrough")
+            depth_image_msg = bridge.cv2_to_imgmsg(cv_frame, encoding="passthrough")
             depth_image_msg.header.stamp = rospy.Time.now()
             depth_image_msg.header.seq = seq
             depth_image_msg.header.frame_id = camera_name+"_rgb_camera_optical_frame"
