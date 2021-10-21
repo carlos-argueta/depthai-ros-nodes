@@ -55,7 +55,7 @@ def create_pipeline():
     # Create a node that will produce the depth map (using disparity output as it's easier to visualize depth this way)
     depth = pipeline.createStereoDepth()
     depth.setConfidenceThreshold(255)
-    depth.setOutputDepth(True)
+    #depth.setOutputDepth(True)
     depth.setOutputRectified(True)
     #depth.setRectifyMirrorFrame(False)
     # Options: MEDIAN_OFF, KERNEL_3x3, KERNEL_5x5, KERNEL_7x7 (default)
@@ -88,7 +88,8 @@ def create_pipeline():
     # Create output
     xoutDepth = pipeline.createXLinkOut()
     xoutDepth.setStreamName("depth")
-    depth.depth.link(xoutDepth.input)
+    #depth.depth.link(xoutDepth.input)
+    depth.disparity.link(xoutDepth.input)
 
     # Create output
     xoutRgb = pipeline.createXLinkOut()
