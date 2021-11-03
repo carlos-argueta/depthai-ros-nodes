@@ -10,6 +10,8 @@ from sensor_msgs.msg import CameraInfo, Image
 
 from pathlib import Path
 
+import time
+
 from cv_bridge import CvBridge, CvBridgeError
 
 from camera_info_manager import CameraInfoManager
@@ -341,13 +343,15 @@ def detections_publisher():
             color_black, color_white = (0, 0, 0), (255, 255, 255)
             label_fps = "Fps: {:.2f}".format(fps)
             (w1, h1), _ = cv2.getTextSize(label_fps, cv2.FONT_HERSHEY_TRIPLEX, 0.4, 1)
-            cv2.rectangle(frame, (0, frame.shape[0] - h1 - 6), (w1 + 2, frame.shape[0]), color_white, -1)
-            cv2.putText(frame, label_fps, (2, frame.shape[0] - 4), cv2.FONT_HERSHEY_TRIPLEX,
-                        0.4, color_black)
+            
+            if debug:
+                cv2.rectangle(frame, (0, frame.shape[0] - h1 - 6), (w1 + 2, frame.shape[0]), color_white, -1)
+                cv2.putText(frame, label_fps, (2, frame.shape[0] - 4), cv2.FONT_HERSHEY_TRIPLEX,
+                            0.4, color_black)
 
-            # show frame
-            cv2.imshow("Localizer", frame)
-            cv2.imshow("Manip + NN", frame_manip)
+                # show frame
+                cv2.imshow("Localizer", frame)
+                cv2.imshow("Manip + NN", frame_manip)
 
 
             
@@ -368,12 +372,16 @@ def detections_publisher():
                 depthMax = depthData.depthMax
 
                 fontType = cv2.FONT_HERSHEY_TRIPLEX
-                cv2.rectangle(depthFrameColor, (xmin, ymin), (xmax, ymax), color, cv2.FONT_HERSHEY_SCRIPT_SIMPLEX)
-                cv2.putText(depthFrameColor, f"X: {int(depthData.spatialCoordinates.x)} mm", (xmin + 10, ymin + 20), fontType, 0.5, 255)
-                cv2.putText(depthFrameColor, f"Y: {int(depthData.spatialCoordinates.y)} mm", (xmin + 10, ymin + 35), fontType, 0.5, 255)
-                cv2.putText(depthFrameColor, f"Z: {int(depthData.spatialCoordinates.z)} mm", (xmin + 10, ymin + 50), fontType, 0.5, 255)
+
+                if debug:
+                    cv2.rectangle(depthFrameColor, (xmin, ymin), (xmax, ymax), color, cv2.FONT_HERSHEY_SCRIPT_SIMPLEX)
+                    cv2.putText(depthFrameColor, f"X: {int(depthData.spatialCoordinates.x)} mm", (xmin + 10, ymin + 20), fontType, 0.5, 255)
+                    cv2.putText(depthFrameColor, f"Y: {int(depthData.spatialCoordinates.y)} mm", (xmin + 10, ymin + 35), fontType, 0.5, 255)
+                    cv2.putText(depthFrameColor, f"Z: {int(depthData.spatialCoordinates.z)} mm", (xmin + 10, ymin + 50), fontType, 0.5, 255)
+            
             # Show the frame
-            cv2.imshow("depth", depthFrameColor)
+            if debug:
+                cv2.imshow("depth", depthFrameColor)
 
 
             counter += 1
