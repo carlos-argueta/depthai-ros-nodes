@@ -6,6 +6,7 @@ import numpy as np
 
 import rospy
 from depthai_ros_msgs.msg import SpatialDetection, SpatialDetectionArray
+from vision_msgs.msg import ObjectHypothesis, BoundingBox2D
 from sensor_msgs.msg import CameraInfo, Image
 
 from pathlib import Path
