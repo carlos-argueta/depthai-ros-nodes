@@ -318,10 +318,13 @@ def detections_publisher():
                 det_box = [d_x1, d_y1, d_x2, d_y2]
                 det_boxes.append((det_box,scores[i]))
 
-                topLeft.x = d_x1
-                topLeft.y = d_y1
-                bottomRight.x = d_x2
-                bottomRight.y = d_y2
+                # Config
+                topLeft = dai.Point2f(d_x1, d_y1)
+                bottomRight = dai.Point2f(d_x2, d_y2)
+                #topLeft.x = 
+                #topLeft.y = 
+                #bottomRight.x = 
+                #bottomRight.y = 
 
                 config = dai.SpatialLocationCalculatorConfigData()
                 config.depthThresholds.lowerThreshold = 100
