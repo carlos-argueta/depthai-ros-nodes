@@ -67,7 +67,7 @@ def bboxToRosMsg(boxesData):
     return opDetectionMsg
 
 def create_pipeline():
-    THRESHOLD = 0.2
+    
     NN_PATH = str((Path(__file__).parent / Path("models/generic_object_localizer_192x192.blob")).resolve().absolute())
     NN_WIDTH = 192
     NN_HEIGHT = 192
@@ -208,8 +208,6 @@ def detections_publisher():
 
     dets_pub = rospy.Publisher('/'+camera_name+'/detections/object_detections', SpatialDetectionArray, queue_size=1)
 
-
-
     bridge = CvBridge()
 
     left_uri = camera_param_uri +"/" + "left.yaml";
@@ -253,6 +251,9 @@ def detections_publisher():
 
     # Pipeline defined, now the device is assigned and pipeline is started
     with dai.Device(pipeline) as device:
+        
+        THRESHOLD = 0.2
+
         np.random.seed(0)
         colors_full = np.random.randint(255, size=(100, 3), dtype=int)
 
