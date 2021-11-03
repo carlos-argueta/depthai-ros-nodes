@@ -8,6 +8,8 @@ import rospy
 from depthai_ros_msgs.msg import SpatialDetection, SpatialDetectionArray
 from sensor_msgs.msg import CameraInfo, Image
 
+from pathlib import Path
+
 from cv_bridge import CvBridge, CvBridgeError
 
 from camera_info_manager import CameraInfoManager
