@@ -64,7 +64,7 @@ def bboxToRosMsg(boxesData):
 
 def create_pipeline():
     THRESHOLD = 0.2
-    NN_PATH = "models/generic_object_localizer_192x192.blob"
+    NN_PATH = str((Path(__file__).parent / Path("models/generic_object_localizer_192x192.blob")).resolve().absolute())
     NN_WIDTH = 192
     NN_HEIGHT = 192
     PREVIEW_WIDTH = 640
