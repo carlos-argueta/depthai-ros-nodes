@@ -414,7 +414,7 @@ def detections_publisher():
                 
                 depth_image_pub.publish(depth_image_msg)
 
-                detections_msg = fbboxToRosMsg(det_boxes)
+                detections_msg = bboxToRosMsg(det_boxes)
                 detections_msg.header = depth_image_msg.header
                 
                 dets_pub.publish(detections_msg)
