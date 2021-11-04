@@ -90,9 +90,9 @@ def create_pipeline():
     # Define a neural network that will make predictions based on the source frames
     detection_nn = pipeline.createNeuralNetwork()
     detection_nn.setBlobPath(NN_PATH)
-    detection_nn.setNumPoolFrames(4)
+    detection_nn.setNumPoolFrames(2)
     detection_nn.input.setBlocking(False)
-    detection_nn.setNumInferenceThreads(2)
+    detection_nn.setNumInferenceThreads(1)
 
     # Color camera
     cam = pipeline.createColorCamera()
