@@ -5,8 +5,13 @@ import depthai as dai
 import numpy as np
 
 import rospy
+
+import tf2_ros
+import tf2_geometry_msgs
+
 from depthai_ros_msgs.msg import SpatialDetection, SpatialDetectionArray
 from vision_msgs.msg import ObjectHypothesis, BoundingBox2D
+from geometry_msgs.msg import Pose, PoseArray, PointStamped
 from sensor_msgs.msg import CameraInfo, Image
 
 from pathlib import Path
@@ -31,7 +36,7 @@ def bboxToRosMsg(boxesData):
     opDetectionMsg.header.stamp = rospy.Time.now()
     opDetectionMsg.header.frame_id = frameName;
 
-    for bbox, score in boxesData:
+    for i, (bbox, score) in enumerate(boxesData):
 
         xMin = int(bbox[0])
         yMin = int(bbox[1])
@@ -47,7 +52,7 @@ def bboxToRosMsg(boxesData):
             
         result = ObjectHypothesis()
         #print(t.label)
-        result.id = -1
+        result.id = i
         result.score = score
         detection.results.append(result)
 
@@ -58,7 +63,7 @@ def bboxToRosMsg(boxesData):
        
 
         detection.is_tracking = False;
-        detection.tracking_id = -1
+        detection.tracking_id = "-1"
 
         opDetectionMsg.detections.append(detection)
 
@@ -176,7 +181,7 @@ def create_pipeline():
 
     return pipeline, stereo
 
-def detections_publisher():
+def detections_publisher(camera_height_from_floor):
 
     rospy.init_node('DepthPublisher', anonymous=True)
     rate = rospy.Rate(5) # ROS Rate at 5Hz
@@ -201,13 +206,18 @@ def detections_publisher():
 
     depth_camera_pub = rospy.Publisher('/'+camera_name+'/depth/camera_info', CameraInfo,
                                                 queue_size=5)
-
     rgb_image_pub = rospy.Publisher('/'+camera_name+'/rgb/image', Image, queue_size=5)
     
     rgb_camera_pub = rospy.Publisher('/'+camera_name+'/rgb/camera_info', CameraInfo,
                                                 queue_size=5)
 
     dets_pub = rospy.Publisher('/'+camera_name+'/detections/object_detections', SpatialDetectionArray, queue_size=1)
+    
+    poses_pub = rospy.Publisher('/'+camera_name+'/detections/object_poses', PoseArray, queue_size=10)
+
+    tf_buffer = tf2_ros.Buffer(rospy.Duration(1200.0)) #tf buffer length
+    tf_listener = tf2_ros.TransformListener(tf_buffer)
+        
 
     bridge = CvBridge()
 
@@ -252,7 +262,7 @@ def detections_publisher():
 
     # Pipeline defined, now the device is assigned and pipeline is started
     with dai.Device(pipeline) as device:
-        
+
         THRESHOLD = 0.2
 
         np.random.seed(0)
@@ -364,6 +374,11 @@ def detections_publisher():
             depthFrameColor = cv2.equalizeHist(depthFrameColor)
             depthFrameColor = cv2.applyColorMap(depthFrameColor, cv2.COLORMAP_HOT)
 
+            source_frame = camera_name+"_right_camera_optical_frame"
+            base_poses = PoseArray()
+            base_poses.header.frame_id = source_frame;
+            base_poses.header.stamp = rospy.Time.now();
+
             spatialData = spatialCalcQueue.get().getSpatialLocations()
             for depthData in spatialData:
                 roi = depthData.config.roi
@@ -372,6 +387,39 @@ def detections_publisher():
                 ymin = int(roi.topLeft().y)
                 xmax = int(roi.bottomRight().x)
                 ymax = int(roi.bottomRight().y)
+
+                camera_point = PointStamped()
+                camera_point.header = base_poses.header
+                camera_point.point.x = depthData.spatialCoordinates.x / 1000.0;
+                camera_point.point.y = (depthData.spatialCoordinates.y + camera_height_from_floor) / 1000.0;
+                camera_point.point.z = depthData.spatialCoordinates.z / 1000.0;
+
+
+                # Convert point from camera optical frame to camera frame
+                target_frame = camera_name+"_right_camera_frame"
+                source_frame = camera_name+"_right_camera_optical_frame"
+
+                transform1 = tf_buffer.lookup_transform(target_frame,
+                    source_frame, #source frame
+                    rospy.Time(0), #get the tf at first available time
+                    rospy.Duration(1.0)) #wait for 1 second
+                frame_point = tf2_geometry_msgs.do_transform_point(camera_point, transform1)
+
+                # Convert the point from camera frame to target frame
+                target_frame = "base_link"
+                source_frame = camera_name+"_right_camera_frame"
+                transform2 = tf_buffer.lookup_transform(target_frame,
+                    source_frame, #source frame
+                    rospy.Time(0), #get the tf at first available time
+                    rospy.Duration(1.0)) #wait for 1 second
+                base_point = tf2_geometry_msgs.do_transform_point(frame_point, transform2)
+
+                base_pose =  Pose()
+                base_pose.position.x = base_point.point.x;
+                base_pose.position.y = base_point.point.y;
+                base_pose.position.z = base_point.point.z;
+
+                base_poses.poses.append(base_pose)
 
                 depthMin = depthData.depthMin
                 depthMax = depthData.depthMax
@@ -403,7 +451,7 @@ def detections_publisher():
 
             if det_boxes:
                 # Create and publish ROS messages
-                cv_frame = (depthFrame * (255 / depth.initialConfig.getMaxDisparity())).astype(np.uint8)
+                cv_frame = (depthFrameColor * (255 / depth.initialConfig.getMaxDisparity())).astype(np.uint8)
 
                 # Available color maps: https://docs.opencv.org/3.4/d3/d50/group__imgproc__colormap.html
                 cv_frame = cv2.applyColorMap(cv_frame, cv2.COLORMAP_JET)
@@ -420,6 +468,8 @@ def detections_publisher():
                 
                 dets_pub.publish(detections_msg)
 
+                poses_pub.publish(base_poses)
+
                 seq = seq + 1
 
             rate.sleep()
@@ -429,6 +479,6 @@ def detections_publisher():
    
 if __name__ == '__main__':
     try:
-        detections_publisher()
+        detections_publisher(390)
     except rospy.ROSInterruptException:
         pass
