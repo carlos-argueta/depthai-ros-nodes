@@ -90,9 +90,9 @@ def create_pipeline():
     # Define a neural network that will make predictions based on the source frames
     detection_nn = pipeline.createNeuralNetwork()
     detection_nn.setBlobPath(NN_PATH)
-    detection_nn.setNumPoolFrames(2)
+    detection_nn.setNumPoolFrames(4)
     detection_nn.input.setBlocking(False)
-    detection_nn.setNumInferenceThreads(1)
+    detection_nn.setNumInferenceThreads(2)
 
     # Color camera
     cam = pipeline.createColorCamera()
@@ -271,7 +271,7 @@ def detections_publisher(camera_height_from_floor):
         # Output queues will be used to get the rgb frames and nn data from the outputs defined above
         q_cam = device.getOutputQueue(name="cam", maxSize=4, blocking=False)
         q_manip = device.getOutputQueue(name="manip", maxSize=4, blocking=False)
-        q_nn = device.getOutputQueue(name="nn", maxSize=1, blocking=False)
+        q_nn = device.getOutputQueue(name="nn", maxSize=4, blocking=False)
 
         depthQueue = device.getOutputQueue(name="depth", maxSize=4, blocking=False)
         spatialCalcQueue = device.getOutputQueue(name="spatialData", maxSize=4, blocking=False)
