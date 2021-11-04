@@ -313,6 +313,7 @@ def detections_publisher(camera_height_from_floor):
             configs = []
             
             det_boxes = []  
+            color = (0, 0, 0)
             for i in range(boxes.shape[0]):
                 box = boxes[i]
                 y1 = (frame.shape[0] * box[0]).astype(int)
