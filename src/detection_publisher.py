@@ -451,19 +451,21 @@ def detections_publisher(camera_height_from_floor):
                 break
 
 
-            if det_boxes:
-                # Create and publish ROS messages
-                cv_frame = (depthFrameColor * (255 / depth.initialConfig.getMaxDisparity())).astype(np.uint8)
+            # Create and publish ROS messages
+            cv_frame = (depthFrameColor * (255 / depth.initialConfig.getMaxDisparity())).astype(np.uint8)
 
-                # Available color maps: https://docs.opencv.org/3.4/d3/d50/group__imgproc__colormap.html
-                cv_frame = cv2.applyColorMap(cv_frame, cv2.COLORMAP_JET)
+            # Available color maps: https://docs.opencv.org/3.4/d3/d50/group__imgproc__colormap.html
+            cv_frame = cv2.applyColorMap(cv_frame, cv2.COLORMAP_JET)
 
-                depth_image_msg = bridge.cv2_to_imgmsg(cv_frame, encoding="passthrough")
-                depth_image_msg.header.stamp = rospy.Time.now()
-                depth_image_msg.header.seq = seq
-                depth_image_msg.header.frame_id = camera_name+"_rgb_camera_optical_frame"
+            depth_image_msg = bridge.cv2_to_imgmsg(cv_frame, encoding="passthrough")
+            depth_image_msg.header.stamp = rospy.Time.now()
+            depth_image_msg.header.seq = seq
+            depth_image_msg.header.frame_id = camera_name+"_rgb_camera_optical_frame"
+            
+            depth_image_pub.publish(depth_image_msg)
                 
-                depth_image_pub.publish(depth_image_msg)
+            if det_boxes:
+                
 
                 detections_msg = bboxToRosMsg(det_boxes)
                 detections_msg.header = depth_image_msg.header
