@@ -351,8 +351,9 @@ def detections_publisher(camera_height_from_floor):
                 cv2.rectangle(frame, (x1, y1), (x1 + 50, y1 + 15), color, -1)
                 cv2.putText(frame, f"{scores[i]:.2f}", (x1 + 10, y1 + 10), cv2.FONT_HERSHEY_TRIPLEX, 0.4, color_black)
 
-            cfg.setROIs(configs)
-            spatialCalcConfigInQueue.send(cfg)
+            if len(configs) > 0:
+                cfg.setROIs(configs)
+                spatialCalcConfigInQueue.send(cfg)
 
             # show fps
             # show fps and predicted count
