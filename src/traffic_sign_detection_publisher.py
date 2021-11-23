@@ -79,8 +79,7 @@ def create_pipeline():
     
     nnBlobPath = str((Path(__file__).parent / Path("models/frozen_inference_graph_openvino_2021.4_5shave.blob")).resolve().absolute())
     # MobilenetSSD label texts
-    labelMap = ['nothing','crosswalk ahead','give way','green light','priority road','red light','right turn','stop sign','traffic light','yellow light']
-
+    
     syncNN = True
 
     # Create pipeline
@@ -235,6 +234,8 @@ def detections_publisher(camera_height_from_floor):
         fps = 0
 
         seq = 0
+
+        labelMap = ['nothing','crosswalk ahead','give way','green light','priority road','red light','right turn','stop sign','traffic light','yellow light']
         
         while not rospy.is_shutdown():
 
@@ -356,7 +357,7 @@ def detections_publisher(camera_height_from_floor):
                 
 
                 detections_msg = bboxToRosMsg(det_boxes)
-                detections_msg.header = depth_image_msg.header
+                detections_msg.header = rgb_image_msg.header
                 
                 dets_pub.publish(detections_msg)
 
