@@ -241,12 +241,13 @@ def detections_publisher(camera_height_from_floor):
         while not rospy.is_shutdown():
 
             inPreview = previewQueue.tryGet()
-            inDet = detectionNNQueue.get()
-            depth = depthQueue.get()
+            inDet = detectionNNQueue.tryGet()
+            depth = depthQueue.tryGet()
 
-            if not inPreview:
+            if not inPreview or not inDet or not depth:
+                print("No data ...")
                 continue
-                
+
             counter+=1
             current_time = time.monotonic()
             if (current_time - startTime) > 1 :
