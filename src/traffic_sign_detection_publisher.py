@@ -80,7 +80,7 @@ def create_pipeline():
     nnBlobPath = str((Path(__file__).parent / Path("models/frozen_inference_graph_openvino_2021.4_5shave.blob")).resolve().absolute())
     # MobilenetSSD label texts
     
-    syncNN = True
+    syncNN = False
 
     # Create pipeline
     pipeline = dai.Pipeline()
