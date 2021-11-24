@@ -80,7 +80,7 @@ def create_pipeline():
     nnBlobPath = str((Path(__file__).parent / Path("models/frozen_inference_graph_openvino_2021.4_5shave.blob")).resolve().absolute())
     # MobilenetSSD label texts
     
-    syncNN = False
+    syncNN = True
 
     # Create pipeline
     pipeline = dai.Pipeline()
@@ -145,7 +145,7 @@ def create_pipeline():
 def detections_publisher(camera_height_from_floor):
 
     rospy.init_node('TrafficSignDetectionPublisher', anonymous=True)
-    rate = rospy.Rate(2) # ROS Rate at 2Hz
+    rate = rospy.Rate(5) # ROS Rate at 2Hz
 
     # Get the parameters:
     cam_id = ''
@@ -169,8 +169,8 @@ def detections_publisher(camera_height_from_floor):
     #                                            queue_size=5)
     rgb_image_pub = rospy.Publisher('/'+camera_name+'/rgb/image', Image, queue_size=5)
     
-    rgb_camera_pub = rospy.Publisher('/'+camera_name+'/rgb/camera_info', CameraInfo,
-                                                queue_size=5)
+    #rgb_camera_pub = rospy.Publisher('/'+camera_name+'/rgb/camera_info', CameraInfo,
+    #                                            queue_size=5)
 
     dets_pub = rospy.Publisher('/'+camera_name+'/detections/traffic_sign_detections', SpatialDetectionArray, queue_size=1)
     
@@ -251,11 +251,11 @@ def detections_publisher(camera_height_from_floor):
                 startTime = current_time
 
             frame = inPreview.getCvFrame()
-            depthFrame = depth.getFrame()
+            #depthFrame = depth.getFrame()
 
-            depthFrameColor = cv2.normalize(depthFrame, None, 255, 0, cv2.NORM_INF, cv2.CV_8UC1)
-            depthFrameColor = cv2.equalizeHist(depthFrameColor)
-            depthFrameColor = cv2.applyColorMap(depthFrameColor, cv2.COLORMAP_HOT)
+            #depthFrameColor = cv2.normalize(depthFrame, None, 255, 0, cv2.NORM_INF, cv2.CV_8UC1)
+            #depthFrameColor = cv2.equalizeHist(depthFrameColor)
+            #depthFrameColor = cv2.applyColorMap(depthFrameColor, cv2.COLORMAP_HOT)
 
             detections = inDet.detections
 
@@ -263,6 +263,7 @@ def detections_publisher(camera_height_from_floor):
             source_frame = camera_name+"_right_camera_optical_frame"
             rospy_time_now = rospy.Time.now();
 
+            '''
             if len(detections) != 0:
                 boundingBoxMapping = xoutBoundingBoxDepthMapping.get()
                 roiDatas = boundingBoxMapping.getConfigData()
@@ -277,7 +278,8 @@ def detections_publisher(camera_height_from_floor):
                     xmax = int(bottomRight.x)
                     ymax = int(bottomRight.y)
 
-                    cv2.rectangle(depthFrameColor, (xmin, ymin), (xmax, ymax), 255, cv2.FONT_HERSHEY_SCRIPT_SIMPLEX)
+                    #cv2.rectangle(depthFrameColor, (xmin, ymin), (xmax, ymax), 255, cv2.FONT_HERSHEY_SCRIPT_SIMPLEX)
+            '''
 
             # If the frame is available, draw bounding boxes on it and show the frame
             height = frame.shape[0]
@@ -352,6 +354,7 @@ def detections_publisher(camera_height_from_floor):
             rgb_image_msg.header.frame_id = camera_name+"_rgb_camera_optical_frame"
 
             rgb_image_pub.publish(rgb_image_msg)
+            print("Publishing")
                 
             if det_boxes:
                 
@@ -366,7 +369,7 @@ def detections_publisher(camera_height_from_floor):
 
             if debug:
                 cv2.putText(frame, "NN fps: {:.2f}".format(fps), (2, frame.shape[0] - 4), cv2.FONT_HERSHEY_TRIPLEX, 0.4, (255,255,255))
-                cv2.imshow("depth", depthFrameColor)
+                #cv2.imshow("depth", depthFrameColor)
                 cv2.imshow("preview", frame)
                 
             
