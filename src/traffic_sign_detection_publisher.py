@@ -145,7 +145,7 @@ def create_pipeline():
 def detections_publisher(camera_height_from_floor):
 
     rospy.init_node('TrafficSignDetectionPublisher', anonymous=True)
-    rate = rospy.Rate(5) # ROS Rate at 5Hz
+    rate = rospy.Rate(2) # ROS Rate at 2Hz
 
     # Get the parameters:
     cam_id = ''
