@@ -98,6 +98,7 @@ def create_pipeline():
     xoutDepth = pipeline.create(dai.node.XLinkOut)
 
     xoutRgb.setStreamName("rgb")
+    xoutRgb.input.setBlocking(False)
     xoutNN.setStreamName("detections")
     xoutBoundingBoxDepthMapping.setStreamName("boundingBoxDepthMapping")
     xoutDepth.setStreamName("depth")
@@ -239,10 +240,13 @@ def detections_publisher(camera_height_from_floor):
         
         while not rospy.is_shutdown():
 
-            inPreview = previewQueue.get()
+            inPreview = previewQueue.tryGet()
             inDet = detectionNNQueue.get()
             depth = depthQueue.get()
 
+            if not inPreview:
+                continue
+                
             counter+=1
             current_time = time.monotonic()
             if (current_time - startTime) > 1 :
