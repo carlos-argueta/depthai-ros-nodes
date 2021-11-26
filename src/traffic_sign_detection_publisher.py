@@ -85,6 +85,8 @@ def create_pipeline():
     # Create pipeline
     pipeline = dai.Pipeline()
 
+    pipeline.setOpenVINOVersion(version = dai.OpenVINO.VERSION_2021_4)
+
     # Define sources and outputs
     camRgb = pipeline.create(dai.node.ColorCamera)
     spatialDetectionNetwork = pipeline.create(dai.node.MobileNetSpatialDetectionNetwork)
