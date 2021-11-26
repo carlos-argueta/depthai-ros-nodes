@@ -225,14 +225,25 @@ def detections_publisher(camera_height_from_floor):
 
     
         # Output queues will be used to get the rgb frames and nn data from the outputs defined above
-        previewQueue = device.getOutputQueue(name="rgb", maxSize=4, blocking=False)
+        #previewQueue = device.getOutputQueue(name="right", maxSize=4, blocking=False)
+        #detectionNNQueue = device.getOutputQueue(name="detections", maxSize=4, blocking=False)
+        #xoutBoundingBoxDepthMapping = device.getOutputQueue(name="boundingBoxDepthMapping", maxSize=4, blocking=False)
+        #depthQueue = device.getOutputQueue(name="depth", maxSize=4, blocking=False)
+
+        # Output queues will be used to get the rgb frames and nn data from the outputs defined above
+        previewQueue = device.getOutputQueue(name="right", maxSize=4, blocking=False)
         detectionNNQueue = device.getOutputQueue(name="detections", maxSize=4, blocking=False)
-        xoutBoundingBoxDepthMapping = device.getOutputQueue(name="boundingBoxDepthMapping", maxSize=4, blocking=False)
+        depthRoiMapQueue = device.getOutputQueue(name="boundingBoxDepthMapping", maxSize=4, blocking=False)
         depthQueue = device.getOutputQueue(name="depth", maxSize=4, blocking=False)
+
+        rectifiedRight = None
+        detections = []
 
         startTime = time.monotonic()
         counter = 0
         fps = 0
+        color = (255, 255, 255)
+
 
         seq = 0
 
@@ -240,9 +251,9 @@ def detections_publisher(camera_height_from_floor):
         
         while not rospy.is_shutdown():
 
-            inPreview = previewQueue.get()
+            inRectified = previewQueue.get()
             inDet = detectionNNQueue.get()
-            depth = depthQueue.get()
+            inDepth = depthQueue.get()
 
             counter+=1
             current_time = time.monotonic()
@@ -251,21 +262,21 @@ def detections_publisher(camera_height_from_floor):
                 counter = 0
                 startTime = current_time
 
-            frame = inPreview.getCvFrame()
-            depthFrame = depth.getFrame()
+            rectifiedRight = inRectified.getCvFrame()
 
+            depthFrame = inDepth.getFrame()
             depthFrameColor = cv2.normalize(depthFrame, None, 255, 0, cv2.NORM_INF, cv2.CV_8UC1)
             depthFrameColor = cv2.equalizeHist(depthFrameColor)
             depthFrameColor = cv2.applyColorMap(depthFrameColor, cv2.COLORMAP_HOT)
-
-            detections = inDet.detections
+            
 
             det_boxes = []  
             source_frame = camera_name+"_right_camera_optical_frame"
             rospy_time_now = rospy.Time.now();
 
+            detections = inDet.detections
             if len(detections) != 0:
-                boundingBoxMapping = xoutBoundingBoxDepthMapping.get()
+                boundingBoxMapping = depthRoiMapQueue.get()
                 roiDatas = boundingBoxMapping.getConfigData()
 
                 for roiData in roiDatas:
@@ -277,18 +288,31 @@ def detections_publisher(camera_height_from_floor):
                     ymin = int(topLeft.y)
                     xmax = int(bottomRight.x)
                     ymax = int(bottomRight.y)
+                    cv2.rectangle(depthFrameColor, (xmin, ymin), (xmax, ymax), color, cv2.FONT_HERSHEY_SCRIPT_SIMPLEX)
 
-                    cv2.rectangle(depthFrameColor, (xmin, ymin), (xmax, ymax), 255, cv2.FONT_HERSHEY_SCRIPT_SIMPLEX)
-
-            # If the frame is available, draw bounding boxes on it and show the frame
-            height = frame.shape[0]
-            width  = frame.shape[1]
+            # If the rectifiedRight is available, draw bounding boxes on it and show the rectifiedRight
+            height = rectifiedRight.shape[0]
+            width = rectifiedRight.shape[1]
             for detection in detections:
                 # Denormalize bounding box
                 x1 = int(detection.xmin * width)
                 x2 = int(detection.xmax * width)
                 y1 = int(detection.ymin * height)
                 y2 = int(detection.ymax * height)
+
+                try:
+                    label = labelMap[detection.label]
+                except:
+                    label = detection.label
+
+                cv2.putText(rectifiedRight, str(label), (x1 + 10, y1 + 20), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
+                cv2.putText(rectifiedRight, "{:.2f}".format(detection.confidence*100), (x1 + 10, y1 + 35), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
+                cv2.putText(rectifiedRight, f"X: {int(detection.spatialCoordinates.x)} mm", (x1 + 10, y1 + 50), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
+                cv2.putText(rectifiedRight, f"Y: {int(detection.spatialCoordinates.y)} mm", (x1 + 10, y1 + 65), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
+                cv2.putText(rectifiedRight, f"Z: {int(detection.spatialCoordinates.z)} mm", (x1 + 10, y1 + 80), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
+
+                cv2.rectangle(rectifiedRight, (x1, y1), (x2, y2), color, cv2.FONT_HERSHEY_SIMPLEX)
+
 
                 camera_point = PointStamped()
                 camera_point.header.frame_id = source_frame;
@@ -322,18 +346,7 @@ def detections_publisher(camera_height_from_floor):
                 pos_box = [base_point.point.x,base_point.point.y,base_point.point.z ]
                 det_boxes.append((det_box,pos_box,detection.label,int(detection.confidence * 100)))
 
-                try:
-                    label = labelMap[detection.label]
-                except:
-                    label = detection.label
-                cv2.putText(frame, str(label), (x1 + 10, y1 + 20), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
-                cv2.putText(frame, "{:.2f}".format(detection.confidence*100), (x1 + 10, y1 + 35), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
-                cv2.putText(frame, f"X: {int(detection.spatialCoordinates.x)} mm", (x1 + 10, y1 + 50), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
-                cv2.putText(frame, f"Y: {int(detection.spatialCoordinates.y)} mm", (x1 + 10, y1 + 65), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
-                cv2.putText(frame, f"Z: {int(detection.spatialCoordinates.z)} mm", (x1 + 10, y1 + 80), cv2.FONT_HERSHEY_TRIPLEX, 0.5, 255)
-
-                cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 0, 0), cv2.FONT_HERSHEY_SIMPLEX)
-
+                
             # Create and publish ROS messages
             #depth_frame = (depthFrameColor * (255 / depth.initialConfig.getMaxDisparity())).astype(np.uint8)
 
@@ -347,7 +360,7 @@ def detections_publisher(camera_height_from_floor):
             
             #depth_image_pub.publish(depth_image_msg)
 
-            rgb_image_msg = bridge.cv2_to_imgmsg(frame, encoding="passthrough")
+            rgb_image_msg = bridge.cv2_to_imgmsg(rectifiedRight, encoding="passthrough")
             rgb_image_msg.header.stamp = rospy.Time.now()
             rgb_image_msg.header.seq = seq
             rgb_image_msg.header.frame_id = camera_name+"_rgb_camera_optical_frame"
@@ -366,10 +379,10 @@ def detections_publisher(camera_height_from_floor):
 
 
             if debug:
-                cv2.putText(frame, "NN fps: {:.2f}".format(fps), (2, frame.shape[0] - 4), cv2.FONT_HERSHEY_TRIPLEX, 0.4, (255,255,255))
+                cv2.putText(rectifiedRight, "NN fps: {:.2f}".format(fps), (2, rectifiedRight.shape[0] - 4), cv2.FONT_HERSHEY_TRIPLEX, 0.4, color)
                 cv2.imshow("depth", depthFrameColor)
-                cv2.imshow("preview", frame)
-                
+                cv2.imshow("rectified right", rectifiedRight)
+                        
             
             
  
