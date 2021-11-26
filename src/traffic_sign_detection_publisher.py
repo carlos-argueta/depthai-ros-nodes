@@ -95,9 +95,13 @@ def create_pipeline():
     stereo = pipeline.create(dai.node.StereoDepth)
 
     xoutRgb = pipeline.create(dai.node.XLinkOut)
+    xoutRgb.input.setBlocking(False)
     xoutNN = pipeline.create(dai.node.XLinkOut)
+    xoutNN.input.setBlocking(False)
     xoutBoundingBoxDepthMapping = pipeline.create(dai.node.XLinkOut)
+    xoutBoundingBoxDepthMapping.input.setBlocking(False)
     xoutDepth = pipeline.create(dai.node.XLinkOut)
+    xoutDepth.input.setBlocking(False)
 
     xoutRgb.setStreamName("rgb")
     xoutNN.setStreamName("detections")
