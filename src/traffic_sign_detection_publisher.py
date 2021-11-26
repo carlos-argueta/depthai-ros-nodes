@@ -125,7 +125,7 @@ def create_pipeline():
     spatialDetectionNetwork.setBlobPath(nnBlobPath)
     spatialDetectionNetwork.setConfidenceThreshold(0.5)
     spatialDetectionNetwork.input.setBlocking(False)
-    spatialDetectionNetwork.setBoundingBoxScaleFactor(0.5)
+    spatialDetectionNetwork.setBoundingBoxScaleFactor(0.2)
     spatialDetectionNetwork.setDepthLowerThreshold(100)
     spatialDetectionNetwork.setDepthUpperThreshold(5000)
 
