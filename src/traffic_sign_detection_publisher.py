@@ -128,6 +128,7 @@ def create_pipeline():
     spatialDetectionNetwork.setBoundingBoxScaleFactor(0.2)
     spatialDetectionNetwork.setDepthLowerThreshold(100)
     spatialDetectionNetwork.setDepthUpperThreshold(5000)
+    spatialDetectionNetwork.setNumInferenceThreads(1)
 
     # Linking
     monoLeft.out.link(stereo.left)
