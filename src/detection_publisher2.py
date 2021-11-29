@@ -102,7 +102,8 @@ def create_pipeline():
     detection_nn = pipeline.create(dai.node.MobileNetDetectionNetwork)
     detection_nn.setConfidenceThreshold(0.5)
     detection_nn.setBlobPath(NN_PATH)
-    detection_nn.setNumInferenceThreads(2)
+    detection_nn.setNumInferenceThreads(1)
+    detection_nn.setNumPoolFrames(2)
     detection_nn.input.setBlocking(False)
 
     # Color camera
