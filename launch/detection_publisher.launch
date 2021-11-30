@@ -13,7 +13,7 @@
   <arg name="camera_name"          default="oak" />
   <arg name="camera_param_uri"      default="package://depthai_ros_nodes/params/camera" />
   
-  <node pkg="depthai_ros_nodes" type="detection_publisher2.py" name="oak_depth_publisher" output="screen">
+  <node pkg="depthai_ros_nodes" type="detection_publisher.py" name="oak_depth_publisher" output="screen">
     <param name="cam_id" value="" />
     <param name="camera_name" value="$(arg camera_name)"/>
     <param name="camera_param_uri" value="$(arg camera_param_uri)"/>
